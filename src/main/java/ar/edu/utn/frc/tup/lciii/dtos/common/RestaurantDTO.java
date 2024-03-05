@@ -1,10 +1,16 @@
 package ar.edu.utn.frc.tup.lciii.dtos.common;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Builder;
+import lombok.*;
+
+import java.io.Serializable;
 
 @Builder
-public class RestaurantDTO {
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class RestaurantDTO implements Serializable {
 
     private Long id;
 

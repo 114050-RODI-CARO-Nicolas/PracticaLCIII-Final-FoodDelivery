@@ -2,11 +2,16 @@ package ar.edu.utn.frc.tup.lciii.dtos.common;
 
 import ar.edu.utn.frc.tup.lciii.model.RushHour;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Builder;
+import lombok.*;
 
 import java.util.List;
 
+
 @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class LocationDTO {
 
     private Long id;
