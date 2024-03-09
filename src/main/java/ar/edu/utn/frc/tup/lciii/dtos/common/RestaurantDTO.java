@@ -1,6 +1,7 @@
 package ar.edu.utn.frc.tup.lciii.dtos.common;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.io.Serializable;
@@ -20,7 +21,8 @@ public class RestaurantDTO implements Serializable {
 
     private String email;
 
-    @JsonIgnore
+
+    //@JsonIgnore
     private String password;
 
 }

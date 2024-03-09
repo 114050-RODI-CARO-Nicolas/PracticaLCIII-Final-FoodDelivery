@@ -5,6 +5,9 @@ import lombok.Setter;
 
 import java.time.DayOfWeek;
 
+
+
+
 @Entity
 @Setter
 public class HorarioAtencion {
@@ -12,7 +15,7 @@ public class HorarioAtencion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private DayOfWeek day;
+    private DayOfWeek _day;
     private Integer startHour;
     private Integer startMinute;
     private Integer endHour;

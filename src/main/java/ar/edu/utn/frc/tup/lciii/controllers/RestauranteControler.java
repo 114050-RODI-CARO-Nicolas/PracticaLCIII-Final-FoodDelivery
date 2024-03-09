@@ -4,6 +4,7 @@ import ar.edu.utn.frc.tup.lciii.dtos.common.LocationDTO;
 import ar.edu.utn.frc.tup.lciii.dtos.common.RestaurantDTO;
 import ar.edu.utn.frc.tup.lciii.services.implementations.LocalServiceImp;
 import ar.edu.utn.frc.tup.lciii.services.implementations.RestauranteServiceImp;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +23,7 @@ public class RestauranteControler {
     LocalServiceImp localServiceImp;
 
     @PostMapping
-    public ResponseEntity<HashMap<String, Boolean>> altaRestaurante(@RequestBody RestaurantDTO requestDTO)
+    public ResponseEntity<HashMap<String, Boolean>> altaRestaurante(@Valid @RequestBody RestaurantDTO requestDTO)
     {
        boolean createdSuccesfully= restauranteServiceImp.altaRestaurante(requestDTO);
        HashMap<String, Boolean> hashMapResult = new HashMap<>();

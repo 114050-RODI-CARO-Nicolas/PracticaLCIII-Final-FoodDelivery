@@ -10,6 +10,8 @@ import ar.edu.utn.frc.tup.lciii.repositories.BarrioRepository;
 import ar.edu.utn.frc.tup.lciii.repositories.LocalRepository;
 import ar.edu.utn.frc.tup.lciii.repositories.RestauranteRepository;
 import ar.edu.utn.frc.tup.lciii.services.ILocalService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,6 +31,9 @@ public class LocalServiceImp implements ILocalService {
 
     @Autowired
     RestauranteRepository restauranteRepository;
+
+    @Autowired
+    ObjectMapper objectMapper;
 
     @Override
     public boolean altaLocal(Long restaurantId, LocationDTO requestDTO) {
@@ -50,24 +55,20 @@ public class LocalServiceImp implements ILocalService {
             List<HorarioAtencion> horariosDeAtencionDelNuevoLocal = new ArrayList<>();
 
             List<RushHour> rushHoursFromRequestDTO = requestDTO.getRushHours();
+            String operationHoursJsonData = objectMapper.writeValueAsString(rushHoursFromRequestDTO);
 
-            for (RushHour rushHour : rushHoursFromRequestDTO
-            ) {
-                HorarioAtencion horarioAtencion = new HorarioAtencion();
-                horarioAtencion.setLocal(nuevoLocal);
-                horarioAtencion.setDay(rushHour.getDay());
-                horarioAtencion.setStartHour(rushHour.getStartHour());
-                horarioAtencion.setStartMinute(rushHour.getStartMinute());
-                horarioAtencion.setEndHour(rushHour.getEndHour());
-                horarioAtencion.setEndMinute(rushHour.getEndMinute());
-                horariosDeAtencionDelNuevoLocal.add(horarioAtencion);
 
-            }
+
             nuevoLocal.setNumeroPedidosMismoTiempo(requestDTO.getMaxCapacity());
-            nuevoLocal.setRushHours(horariosDeAtencionDelNuevoLocal);
+            nuevoLocal.setOperationHoursJsonData(operationHoursJsonData);
             restauranteEncontrado.getLocales().add(nuevoLocal);
             restauranteRepository.save(restauranteEncontrado);
 
+        }
+
+        catch (JsonProcessingException e)
+        {
+            e.printStackTrace();
         }
 
         catch (RuntimeException ex){

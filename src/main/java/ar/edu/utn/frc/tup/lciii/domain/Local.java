@@ -25,17 +25,26 @@ public class Local implements Serializable {
     private String nombre;
 
 
+    private Integer numeroPedidosMismoTiempo;
+
+    private String operationHoursJsonData;
+
+
     @ManyToOne
     @JoinColumn(name = "id_barrio", referencedColumnName = "id")
     private Barrio barrio;
-    private Integer numeroPedidosMismoTiempo;
 
-    @OneToMany(mappedBy = "local", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    private List<HorarioAtencion> rushHours = new ArrayList<>();
+
+
+
 
     @ManyToOne
     @JoinColumn(name = "id_restaurante", referencedColumnName = "id")
     private Restaurante restaurante;
+
+
+
+
 
 
 
