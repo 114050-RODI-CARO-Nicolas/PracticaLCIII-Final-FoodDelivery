@@ -1,7 +1,7 @@
 package ar.edu.utn.frc.tup.lciii.services.implementations;
 
 import ar.edu.utn.frc.tup.lciii.domain.Barrio;
-import ar.edu.utn.frc.tup.lciii.domain.HorarioAtencion;
+import ar.edu.utn.frc.tup.lciii.domain.DEPRECATED_HorarioAtencion;
 import ar.edu.utn.frc.tup.lciii.domain.Local;
 import ar.edu.utn.frc.tup.lciii.domain.Restaurante;
 import ar.edu.utn.frc.tup.lciii.dtos.common.LocationDTO;
@@ -52,7 +52,7 @@ public class LocalServiceImp implements ILocalService {
                 throw new RuntimeException("Source: LocalServiceImp-altaLocal()- El Local no tiene horarios de atencion validos");
             }
 
-            List<HorarioAtencion> horariosDeAtencionDelNuevoLocal = new ArrayList<>();
+
 
             List<RushHour> rushHoursFromRequestDTO = requestDTO.getRushHours();
             String operationHoursJsonData = objectMapper.writeValueAsString(rushHoursFromRequestDTO);
@@ -62,7 +62,11 @@ public class LocalServiceImp implements ILocalService {
             nuevoLocal.setNumeroPedidosMismoTiempo(requestDTO.getMaxCapacity());
             nuevoLocal.setOperationHoursJsonData(operationHoursJsonData);
             restauranteEncontrado.getLocales().add(nuevoLocal);
+
             restauranteRepository.save(restauranteEncontrado);
+            {
+                createdSuccesfully=true;
+            };
 
         }
 
@@ -80,7 +84,7 @@ public class LocalServiceImp implements ILocalService {
         }
 
 
-        createdSuccesfully=true;
+
         return createdSuccesfully;
 
 

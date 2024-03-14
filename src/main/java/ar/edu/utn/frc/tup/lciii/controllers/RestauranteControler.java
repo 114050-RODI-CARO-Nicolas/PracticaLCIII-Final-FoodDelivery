@@ -1,8 +1,10 @@
 package ar.edu.utn.frc.tup.lciii.controllers;
 
 import ar.edu.utn.frc.tup.lciii.dtos.common.LocationDTO;
+import ar.edu.utn.frc.tup.lciii.dtos.common.ProductDTO;
 import ar.edu.utn.frc.tup.lciii.dtos.common.RestaurantDTO;
 import ar.edu.utn.frc.tup.lciii.services.implementations.LocalServiceImp;
+import ar.edu.utn.frc.tup.lciii.services.implementations.MenuServiceImp;
 import ar.edu.utn.frc.tup.lciii.services.implementations.RestauranteServiceImp;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +24,9 @@ public class RestauranteControler {
     @Autowired
     LocalServiceImp localServiceImp;
 
+    @Autowired
+    MenuServiceImp menuServiceImp;
+
     @PostMapping
     public ResponseEntity<HashMap<String, Boolean>> altaRestaurante(@Valid @RequestBody RestaurantDTO requestDTO)
     {
@@ -40,6 +45,20 @@ public class RestauranteControler {
         return new ResponseEntity<>(hashMapResult, HttpStatus.CREATED);
 
     }
+
+    @PostMapping("/{idRestaurante}/locales/{idLocal}/menus")
+    public ResponseEntity<HashMap<String, Boolean>> altaMenu(@PathVariable long idRestaurante, @RequestBody ProductDTO requestDTO)
+    {
+        boolean createdSuccesfully= menuServiceImp.altaMenu(idRestaurante, requestDTO);
+        HashMap<String, Boolean> hashMapResult = new HashMap<>();
+        hashMapResult.put("Creado:", createdSuccesfully);
+        return new ResponseEntity<>(hashMapResult, HttpStatus.CREATED);
+
+    }
+
+
+
+
 
 
 

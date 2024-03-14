@@ -1,10 +1,15 @@
 package ar.edu.utn.frc.tup.lciii.domain;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
+import lombok.Setter;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 @Entity
+@Setter
 public class Menu implements Serializable {
 
     @Id
@@ -12,13 +17,20 @@ public class Menu implements Serializable {
     private Long id;
 
     private String nombre;
-    private Double precio;
+    @DecimalMin(value="0.0", inclusive = false, message = "Value must be greater than 0")
+    private BigDecimal precio;
+    @Min(value=0)
     private Integer minutosPreparacion;
-    private String categoria;
+
 
     @ManyToOne
     @JoinColumn(name = "id_restaurante", referencedColumnName = "id")
     private Restaurante restaurante;
+
+    @OneToOne
+    private CategoriaMenu categoria;
+
+
 
 
 }

@@ -22,6 +22,7 @@ public class Restaurante implements Serializable {
 
     @NotBlank
     @NotEmpty
+    @Column(unique = true)
     private String nombre;
 
     @NotBlank
@@ -43,7 +44,8 @@ public class Restaurante implements Serializable {
 
     @OneToMany(mappedBy="restaurante", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     List<Local> locales= new ArrayList<>();
-    @OneToMany
+
+    @OneToMany(mappedBy="restaurante", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     List<Menu> menus = new ArrayList<>();
 
 

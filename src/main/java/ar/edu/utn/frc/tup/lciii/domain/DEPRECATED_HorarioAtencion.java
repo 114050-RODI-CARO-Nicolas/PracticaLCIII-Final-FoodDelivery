@@ -8,9 +8,9 @@ import java.time.DayOfWeek;
 
 
 
-@Entity
+//@Entity
 @Setter
-public class HorarioAtencion {
+public class DEPRECATED_HorarioAtencion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
