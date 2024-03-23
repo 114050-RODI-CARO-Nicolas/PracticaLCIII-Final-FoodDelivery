@@ -5,11 +5,12 @@ import jakarta.persistence.*;
 import java.io.Serializable;
 
 @Entity
-public class User implements Serializable {
+public class Usuario implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String nombre;
     private String nickname;
 

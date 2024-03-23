@@ -1,7 +1,9 @@
 package ar.edu.utn.frc.tup.lciii.domain;
 
 import ar.edu.utn.frc.tup.lciii.model.RushHour;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.jackson.JsonComponent;
 
@@ -14,6 +16,7 @@ import java.util.Set;
 
 @Entity
 @Setter
+@Getter
 public class Local implements Serializable {
 
 
@@ -30,16 +33,17 @@ public class Local implements Serializable {
     private String operationHoursJsonData;
 
 
-    @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "id_barrio", referencedColumnName = "id")
+    @ManyToOne
     private Barrio barrio;
 
 
 
 
-
-    @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "id_restaurante", referencedColumnName = "id")
+    @ManyToOne
     private Restaurante restaurante;
 
 

@@ -23,6 +23,9 @@ public class MenuServiceImp implements IMenuService {
     @Autowired
     RestauranteRepository restauranteRepository;
 
+    @Autowired
+    MenuRepository menuRepository;
+
 
     @Override
     public boolean altaMenu(long restauranteId, ProductDTO requestDTO) {
@@ -39,7 +42,7 @@ public class MenuServiceImp implements IMenuService {
             newMenu.setPrecio(requestDTO.getPrice());
             newMenu.setMinutosPreparacion(requestDTO.getPreparationTime());
 
-            restauranteRepository.save(foundRestaurant);
+            menuRepository.save(newMenu);
             {
                 createdSuccesfully=true;
             }

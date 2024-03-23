@@ -5,5 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface BarrioRepository extends JpaRepository<Barrio, Long> {
 
-    Barrio findByNombre(String barrioToFind);
+    Barrio findByNombre(String nombre);
 }

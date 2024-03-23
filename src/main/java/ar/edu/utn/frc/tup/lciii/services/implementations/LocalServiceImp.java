@@ -16,6 +16,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.xml.stream.Location;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,7 +46,10 @@ public class LocalServiceImp implements ILocalService {
             Restaurante restauranteEncontrado = restauranteRepository.findById(restaurantId).orElseThrow( ()-> new EntityNotFoundException("Restaurante buscado no existe"));
             Local nuevoLocal = new Local();
             Barrio barrioDelNuevoLocal = barrioRepository.findByNombre(requestDTO.getNeighborhood());
+            nuevoLocal.setRestaurante(restauranteEncontrado);
             nuevoLocal.setBarrio(barrioDelNuevoLocal);
+          //  barrioDelNuevoLocal.agregarLocal(nuevoLocal);
+
             nuevoLocal.setNombre(requestDTO.getName());
 
             if(requestDTO.getRushHours().size()==0) {
@@ -61,9 +65,10 @@ public class LocalServiceImp implements ILocalService {
 
             nuevoLocal.setNumeroPedidosMismoTiempo(requestDTO.getMaxCapacity());
             nuevoLocal.setOperationHoursJsonData(operationHoursJsonData);
-            restauranteEncontrado.getLocales().add(nuevoLocal);
 
-            restauranteRepository.save(restauranteEncontrado);
+           // restauranteEncontrado.getLocales().add(nuevoLocal);
+
+            localRepository.save(nuevoLocal);
             {
                 createdSuccesfully=true;
             };
@@ -89,4 +94,17 @@ public class LocalServiceImp implements ILocalService {
 
 
     }
+
+
+    @Override
+    public List<Local> obtenerLocalesPorRestaurant(long idRestaurante)
+    {
+
+        Restaurante foundRestaurant = restauranteRepository.findById(idRestaurante).orElseThrow( ()-> new EntityNotFoundException("No se encontro el restaurante con ese ID"));
+        return foundRestaurant.getLocales();
+
+    }
+
+
+
 }

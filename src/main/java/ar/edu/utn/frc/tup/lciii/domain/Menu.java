@@ -19,7 +19,7 @@ public class Menu implements Serializable {
     private String nombre;
     @DecimalMin(value="0.0", inclusive = false, message = "Value must be greater than 0")
     private BigDecimal precio;
-    @Min(value=0)
+    @Min(value=1, message = "Value must be greater than 0")
     private Integer minutosPreparacion;
 
 
@@ -27,7 +27,8 @@ public class Menu implements Serializable {
     @JoinColumn(name = "id_restaurante", referencedColumnName = "id")
     private Restaurante restaurante;
 
-    @OneToOne
+    @ManyToOne
+    @JoinColumn(name="id_categoria", referencedColumnName = "id")
     private CategoriaMenu categoria;
 
 
