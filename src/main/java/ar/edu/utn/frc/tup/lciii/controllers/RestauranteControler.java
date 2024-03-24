@@ -5,10 +5,8 @@ import ar.edu.utn.frc.tup.lciii.domain.Local;
 import ar.edu.utn.frc.tup.lciii.dtos.common.LocationDTO;
 import ar.edu.utn.frc.tup.lciii.dtos.common.ProductDTO;
 import ar.edu.utn.frc.tup.lciii.dtos.common.RestaurantDTO;
-import ar.edu.utn.frc.tup.lciii.services.implementations.BarrioServiceImp;
-import ar.edu.utn.frc.tup.lciii.services.implementations.LocalServiceImp;
-import ar.edu.utn.frc.tup.lciii.services.implementations.MenuServiceImp;
-import ar.edu.utn.frc.tup.lciii.services.implementations.RestauranteServiceImp;
+import ar.edu.utn.frc.tup.lciii.dtos.common.UserDTO;
+import ar.edu.utn.frc.tup.lciii.services.implementations.*;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -34,6 +32,8 @@ public class RestauranteControler {
 
     @Autowired
     BarrioServiceImp barrioServiceImp;
+
+
 
 
 
@@ -80,7 +80,8 @@ public class RestauranteControler {
        List<Local> lstLocales = barrioServiceImp.obtenerLocalesDelBarrio(idBarrio);
 
        return new ResponseEntity<>(lstLocales, HttpStatus.OK);
-    }
+    };
+
 
 
 

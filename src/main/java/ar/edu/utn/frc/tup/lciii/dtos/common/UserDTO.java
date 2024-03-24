@@ -2,16 +2,24 @@ package ar.edu.utn.frc.tup.lciii.dtos.common;
 
 import ar.edu.utn.frc.tup.lciii.model.UserLevel;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Builder;
+import lombok.*;
+import org.springframework.stereotype.Service;
+
+import java.io.Serializable;
+
 
 @Builder
-public class UserDTO {
+@NoArgsConstructor
+@AllArgsConstructor
+@Setter
+@Getter
+public class UserDTO implements Serializable  {
 
     private Long id;
 
     private String name;
 
-    @JsonProperty("last_name")
+
     private String lastName;
 
     private String nickname;
@@ -19,4 +27,8 @@ public class UserDTO {
     private String neighborhood;
 
     private UserLevel level;
+
+
+
 }
+
