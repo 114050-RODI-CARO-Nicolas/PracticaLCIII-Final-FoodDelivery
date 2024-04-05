@@ -36,9 +36,9 @@ public class Restaurante implements Serializable {
 
 
 
-    @NotBlank
-    @NotEmpty
-    @Size(min = 8, max = 15)
+    @NotBlank(message = "Password should not be a blank")
+    @NotEmpty(message = "Password should not be an empty string")
+    @Size(min = 8, max = 15,  message = "Password must have between 8 and 15 characters")
     @Pattern(regexp = "(?=.*\\\\d)", message = "Password must contain at least one digit")
     private String contraseña;
 

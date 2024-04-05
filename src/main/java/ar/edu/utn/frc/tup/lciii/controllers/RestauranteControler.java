@@ -8,6 +8,7 @@ import ar.edu.utn.frc.tup.lciii.dtos.common.RestaurantDTO;
 import ar.edu.utn.frc.tup.lciii.dtos.common.UserDTO;
 import ar.edu.utn.frc.tup.lciii.services.implementations.*;
 import jakarta.validation.Valid;
+import jakarta.websocket.server.PathParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -66,6 +67,17 @@ public class RestauranteControler {
 
     }
 
+
+    @GetMapping()
+    public ResponseEntity<List<RestaurantDTO>> obtenerLocalesPorBarrio(@RequestParam String barrio){
+
+        List<RestaurantDTO> lstRestaurantDTO = barrioServiceImp.obtenerRestaurantesDelBarrio(barrio);
+
+        return new ResponseEntity<>(lstRestaurantDTO, HttpStatus.OK);
+    };
+
+
+
     @GetMapping("/{idRestaurante}/locales")
     public ResponseEntity<List<Local>> obtenerLocalesPorRestaurant(@PathVariable long idRestaurante)
     {
@@ -74,13 +86,8 @@ public class RestauranteControler {
     }
 
 
-    @GetMapping("/barrios/{idBarrio}/locales")
-    public ResponseEntity<List<Local>> obtenerLocalesPorBarrio(@PathVariable long idBarrio){
 
-       List<Local> lstLocales = barrioServiceImp.obtenerLocalesDelBarrio(idBarrio);
 
-       return new ResponseEntity<>(lstLocales, HttpStatus.OK);
-    };
 
 
 
