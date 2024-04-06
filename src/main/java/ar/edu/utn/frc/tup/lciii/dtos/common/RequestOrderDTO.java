@@ -2,12 +2,16 @@ package ar.edu.utn.frc.tup.lciii.dtos.common;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Builder;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class RequestOrderDTO {
 
     @JsonProperty("user_id")

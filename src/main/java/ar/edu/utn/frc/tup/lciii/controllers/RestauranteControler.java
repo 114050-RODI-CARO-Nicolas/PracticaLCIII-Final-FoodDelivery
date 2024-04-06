@@ -85,6 +85,16 @@ public class RestauranteControler {
         return new ResponseEntity<>(lstLocales, HttpStatus.OK);
     }
 
+    @GetMapping("/{idRestaurante}/menus")
+    public ResponseEntity<List<ProductDTO>> obtenerMenusPorRestaurant(@PathVariable long idRestaurante)
+    {
+        List<ProductDTO> responseDTOList = restauranteServiceImp.obtenerMenusPorRestaurante(idRestaurante);
+        return new ResponseEntity<>(responseDTOList, HttpStatus.OK);
+    }
+
+
+
+
 
 
 

@@ -3,6 +3,7 @@ package ar.edu.utn.frc.tup.lciii.domain;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
+import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Serializable;
@@ -10,6 +11,7 @@ import java.math.BigDecimal;
 
 @Entity
 @Setter
+@Getter
 public class Menu implements Serializable {
 
     @Id
@@ -17,8 +19,10 @@ public class Menu implements Serializable {
     private Long id;
 
     private String nombre;
+
     @DecimalMin(value="0.0", inclusive = false, message = "Value must be greater than 0")
     private BigDecimal precio;
+
     @Min(value=1, message = "Value must be greater than 0")
     private Integer minutosPreparacion;
 

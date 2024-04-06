@@ -35,6 +35,11 @@ public class MenuServiceImp implements IMenuService {
 
             Restaurante foundRestaurant = restauranteRepository.findById(restauranteId).orElseThrow( ()-> new EntityNotFoundException("Source: MenuService.altaMenu() - No se encontraron menus con el ID solicitado'"));
             CategoriaMenu foundCategory = categoriaRepository.findByNombre(requestDTO.getCategory().getName());
+
+            if(foundCategory == null){
+                throw new EntityNotFoundException("No se encontro la categoria con ese nombre");
+            }
+
             Menu newMenu = new Menu();
             newMenu.setRestaurante(foundRestaurant);
             newMenu.setCategoria(foundCategory);
