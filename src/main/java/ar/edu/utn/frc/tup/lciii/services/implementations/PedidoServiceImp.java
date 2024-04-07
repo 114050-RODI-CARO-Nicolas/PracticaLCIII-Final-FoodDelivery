@@ -46,7 +46,7 @@ public class PedidoServiceImp implements IPedidoService {
         catch (Exception ex)
 
         {
-
+            throw ex;
 
         }
 
