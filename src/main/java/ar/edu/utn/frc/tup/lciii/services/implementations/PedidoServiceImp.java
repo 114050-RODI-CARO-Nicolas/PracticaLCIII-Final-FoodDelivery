@@ -141,7 +141,9 @@ public class PedidoServiceImp implements IPedidoService {
 
             //Comparar el dia del pedido con cada dia de la lista rushHour
 
-
+            ////Esta mal la siguiente comprobacion
+            // porque si el local tiene tres horarios de atencion, ya si el primero no coincide con el horario solicitado
+            // se retorna false y no se vuelve a iterar.
             LocalDateTime horaEntregaSolicitada = pedido.getHoraEntregaSolicitada();
             for (RushHour horarioAtencion : rushHours
             ) {
