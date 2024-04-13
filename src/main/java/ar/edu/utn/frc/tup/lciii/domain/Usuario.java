@@ -3,12 +3,14 @@ package ar.edu.utn.frc.tup.lciii.domain;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Serializable;
 
 @Entity
 @Setter
+@Getter
 public class Usuario implements Serializable {
 
     @Id

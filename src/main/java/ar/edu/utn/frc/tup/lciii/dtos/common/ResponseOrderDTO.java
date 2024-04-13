@@ -21,7 +21,7 @@ public class ResponseOrderDTO {
     private String restaurantName;
 
     @JsonProperty("location_name")
-    private Long locationName;
+    private String locationName;
 
     private List<ResponseProductOrderDTO> products;
 

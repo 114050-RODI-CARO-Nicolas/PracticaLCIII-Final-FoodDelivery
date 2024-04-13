@@ -25,7 +25,7 @@ public class RequestOrderDTO {
 
     private List<RequestProductOrderDTO> products;
 
-    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
+    //@JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @JsonProperty("request_date_time")
     private LocalDateTime requestDateTime;
 
