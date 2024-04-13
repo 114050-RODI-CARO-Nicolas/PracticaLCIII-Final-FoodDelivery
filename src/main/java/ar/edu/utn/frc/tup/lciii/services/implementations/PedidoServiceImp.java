@@ -4,18 +4,27 @@ import ar.edu.utn.frc.tup.lciii.domain.*;
 import ar.edu.utn.frc.tup.lciii.dtos.common.RequestOrderDTO;
 import ar.edu.utn.frc.tup.lciii.dtos.common.RequestProductOrderDTO;
 import ar.edu.utn.frc.tup.lciii.dtos.common.ResponseOrderDTO;
+import ar.edu.utn.frc.tup.lciii.model.RushHour;
 import ar.edu.utn.frc.tup.lciii.repositories.*;
 import ar.edu.utn.frc.tup.lciii.services.IPedidoService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.core.util.Json;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.management.RuntimeErrorException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.RejectedExecutionException;
 
 @Service
 public class PedidoServiceImp implements IPedidoService {
@@ -34,6 +43,13 @@ public class PedidoServiceImp implements IPedidoService {
 
     @Autowired
     MenuRepository menuRepository;
+
+    @Autowired
+    BarrioRepository barrioRepository;
+
+    @Autowired
+    ObjectMapper objectMapper;
+
 
     @Override
     public ResponseOrderDTO crearPedido(RequestOrderDTO requestDTO) {
@@ -74,23 +90,156 @@ public class PedidoServiceImp implements IPedidoService {
             BigDecimal costoTotal = PedidoServiceImp.CalcularCostoPedido(detallePedidos, foundUser, newPedido.getHoraEntregaSolicitada());
             newPedido.setCostoTotal(costoTotal);
 
+         if(this.ChequearDisponibilidadPorMaxPedidosConcurrentes(foundLocation, newPedido.getHoraEntregaSolicitada() ) == false )
+         {
+             throw new CancellationException("El pedido no puede ser procesado porque el local no puede manejar cierta cantidad de pedidos al mismo tiempo");
+         }
 
+         if ( this.ChequarDisponibilidadBarrio(foundUser, foundLocation )==false )
+         {
+             throw new CancellationException("El local solicitado no opera en el barrio del cliente");
+         }
 
+         if(this.ChequearDisponibilidadHoraria(newPedido, foundLocation) == false )
+         {
+             throw new CancellationException("El pedido no puede ser procesado porque el local no opera a la hora solicitada");
+         }
             pedidoRepository.save(newPedido);
-
+        }
+        catch (RuntimeException ex)
+        {
+            throw ex;
         }
 
         catch (Exception ex)
-
         {
             throw ex;
 
         }
-
-
-
-
         return responseOrderDTO;
+    }
+
+
+    ////////////////PROCESS UTILITIES
+
+    public  boolean ChequearDisponibilidadPorMaxPedidosConcurrentes(Local requestedLocation, LocalDateTime horaSolicitada)
+    {
+        Integer maxConcurrentOrders = requestedLocation.getNumeroPedidosMismoTiempo();
+        List<Pedido> concurrentOrders = pedidoRepository.findByhoraEntregaSolicitada(horaSolicitada);
+
+        return maxConcurrentOrders>concurrentOrders.size();
+
+    };
+
+    public boolean ChequearDisponibilidadHoraria(Pedido pedido, Local requestedLocation)  {
+        String jsonString = requestedLocation.getOperationHoursJsonData();
+
+        try {
+            RushHour[] rushHours = objectMapper.readValue(jsonString, RushHour[].class);
+
+            //Obtener el List<RushHour>, donde hay un DOW del enum universal, y las horas y minutos del START y las del END son Integer
+
+            //Comparar el dia del pedido con cada dia de la lista rushHour
+
+
+            LocalDateTime horaEntregaSolicitada = pedido.getHoraEntregaSolicitada();
+            for (RushHour horarioAtencion : rushHours
+            ) {
+                if(horaEntregaSolicitada.getDayOfWeek() == horarioAtencion.getDay())
+                {
+                    //EL dia de atencion del local coincide con el dia del pedido
+
+                    Integer horaApertura = horarioAtencion.getStartHour();
+                    Integer minutosApertura = horarioAtencion.getEndMinute();
+
+                    Integer horaCierre = horarioAtencion.getStartHour();
+                    Integer minutosCierre = horarioAtencion.getEndMinute();
+
+                    LocalTime horarioApertura =  LocalTime.of(horaApertura, minutosApertura);
+                    LocalTime horarioCierre = LocalTime.of(horaCierre, minutosCierre);
+
+                    LocalTime horaEntregaSolicitadaSinDia = horaEntregaSolicitada.toLocalTime();
+
+
+                    if(horaEntregaSolicitadaSinDia.isBefore(horarioApertura))
+                    {
+                        return false;
+                    }
+
+                    if(horaEntregaSolicitadaSinDia.isAfter(horarioCierre)){
+                        return false;
+                    }
+
+                    if(horaEntregaSolicitadaSinDia.isAfter(horarioApertura) && horaEntregaSolicitadaSinDia.isBefore(horarioCierre))
+                    {
+                        return true;
+                    }
+
+                }
+                //El dia solicitado no se atiende en el local;
+                return false;
+            }
+            return false;
+        }
+
+        catch (JsonProcessingException ex)
+        {
+            throw new RuntimeException(ex.getMessage());
+        }
+
+
+    };
+
+    public boolean ChequarDisponibilidadBarrio(Usuario usuario, Local requestedLocation)
+    {
+      Barrio barrioUser = usuario.getBarrio();
+      Barrio barrioLocalSolicitado = requestedLocation.getBarrio();
+
+      return barrioUser.equals(barrioLocalSolicitado);
+
+    };
+
+
+
+    public static LocalDateTime ObtenerHorarioEstimado(List<DetallePedido> detallePedidos, LocalDateTime horaSolicitada){
+
+
+        //Obtener lista de valores de minutos preparacion en lista menus
+
+        List<Integer> listaMinutosPreparacion = new ArrayList<>();
+        for (DetallePedido detalle: detallePedidos
+             ) {
+            listaMinutosPreparacion.add(detalle.getMenu().getMinutosPreparacion());
+        };
+
+        //Obtener producto de la lista de minutosPrep que mas demora en prepararse
+
+        if ( listaMinutosPreparacion.size()==0){
+            throw new RuntimeException("prep time list of values should not be empty");
+        }
+
+
+
+        Integer maxNumber;
+
+          maxNumber = listaMinutosPreparacion.get(0);
+
+          if (listaMinutosPreparacion.size()>1)
+          {
+              for(int i = 1; i < listaMinutosPreparacion.size(); i++){
+                  int currentNumber = listaMinutosPreparacion.get(i);
+                  if(currentNumber>maxNumber)
+                  {
+                      maxNumber = currentNumber;
+                  }
+              }
+
+          }
+
+
+       LocalDateTime horarioEstimado = horaSolicitada.plusMinutes(maxNumber);
+        horarioEstimado.plusMinutes(15);
+        return horarioEstimado;
 
     }
 
@@ -183,10 +332,8 @@ public class PedidoServiceImp implements IPedidoService {
 
         return totalTotal;
 
-
-
     }
 
 
 
-}
+};
