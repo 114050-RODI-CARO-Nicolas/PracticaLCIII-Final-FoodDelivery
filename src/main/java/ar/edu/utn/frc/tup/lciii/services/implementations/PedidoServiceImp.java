@@ -4,6 +4,7 @@ import ar.edu.utn.frc.tup.lciii.domain.*;
 import ar.edu.utn.frc.tup.lciii.dtos.common.RequestOrderDTO;
 import ar.edu.utn.frc.tup.lciii.dtos.common.RequestProductOrderDTO;
 import ar.edu.utn.frc.tup.lciii.dtos.common.ResponseOrderDTO;
+import ar.edu.utn.frc.tup.lciii.dtos.common.ResponseProductOrderDTO;
 import ar.edu.utn.frc.tup.lciii.model.RushHour;
 import ar.edu.utn.frc.tup.lciii.repositories.*;
 import ar.edu.utn.frc.tup.lciii.services.IPedidoService;
@@ -87,7 +88,7 @@ public class PedidoServiceImp implements IPedidoService {
             newPedido.setUsuario(foundUser);
             newPedido.setHoraEntregaSolicitada(requestDTO.getRequestDateTime());
 
-            BigDecimal costoTotal = PedidoServiceImp.CalcularCostoPedido(detallePedidos, foundUser, newPedido.getHoraEntregaSolicitada());
+            BigDecimal costoTotal = PedidoServiceImp.CalcularCostoTotalPedido(newPedido.getUsuario(), newPedido.getHoraEntregaSolicitada(), newPedido.getDetalles());
             newPedido.setCostoTotal(costoTotal);
 
          if(this.ChequearDisponibilidadPorMaxPedidosConcurrentes(foundLocation, newPedido.getHoraEntregaSolicitada() ) == false )
@@ -105,7 +106,44 @@ public class PedidoServiceImp implements IPedidoService {
              throw new CancellationException("El pedido no puede ser procesado porque el local no opera a la hora solicitada");
          }
             pedidoRepository.save(newPedido);
+
+         responseOrderDTO.setId(newPedido.getId());
+
+         responseOrderDTO.setRestaurantName(newPedido.getRestaurante().getNombre());
+         responseOrderDTO.setLocationName(newPedido.getLocal().getNombre());
+         //Tal vez esta property de abajo tambien deberia estar en la clase de dominio
+         responseOrderDTO.setEstimatedDeliveryDateTime(PedidoServiceImp.ObtenerHorarioEstimado(newPedido.getDetalles(), newPedido.getHoraEntregaSolicitada()));
+
+         responseOrderDTO.setTotalAmountOrder(newPedido.getCostoTotal());
+         //Tal vez estas 3 properties de abajo tambien deberia estar en la clase de dominio
+         responseOrderDTO.setServiceCostAmount(PedidoServiceImp.CalcularCostoServicio(newPedido.getUsuario()));
+         responseOrderDTO.setDeliveryAmount(PedidoServiceImp.CalcularCostoEnvioSegunHoraPico(newPedido.getHoraEntregaSolicitada()));
+         responseOrderDTO.setTotalProductsAmount(PedidoServiceImp.CalcularCostoTotalProductos(newPedido.getDetalles()));
+
+
+         List<ResponseProductOrderDTO> responseProductOrderDTOList = new ArrayList<>();
+
+         for (DetallePedido detalle: newPedido.getDetalles())
+         {
+            ResponseProductOrderDTO responseProductOrderDTO = new ResponseProductOrderDTO();
+            responseProductOrderDTO.setProductName(detalle.getMenu().getNombre());
+            responseProductOrderDTO.setProductPrice(detalle.getMenu().getPrecio());
+            responseProductOrderDTO.setQuantity(detalle.getCantidad());
+            responseProductOrderDTO.setTotalProductAmount( detalle.getMenu().getPrecio().multiply(new BigDecimal( detalle.getCantidad()) ) );
+            responseProductOrderDTOList.add(responseProductOrderDTO);
+
+         }
+         responseOrderDTO.setProducts(responseProductOrderDTOList);
+
+
+
+
+
+
         }
+
+
+
         catch (RuntimeException ex)
         {
             throw ex;
@@ -144,6 +182,9 @@ public class PedidoServiceImp implements IPedidoService {
             ////Esta mal la siguiente comprobacion
             // porque si el local tiene tres horarios de atencion, ya si el primero no coincide con el horario solicitado
             // se retorna false y no se vuelve a iterar.
+
+
+
             LocalDateTime horaEntregaSolicitada = pedido.getHoraEntregaSolicitada();
             for (RushHour horarioAtencion : rushHours
             ) {
@@ -152,25 +193,15 @@ public class PedidoServiceImp implements IPedidoService {
                     //EL dia de atencion del local coincide con el dia del pedido
 
                     Integer horaApertura = horarioAtencion.getStartHour();
-                    Integer minutosApertura = horarioAtencion.getEndMinute();
+                    Integer minutosApertura = horarioAtencion.getStartMinute();
 
-                    Integer horaCierre = horarioAtencion.getStartHour();
+                    Integer horaCierre = horarioAtencion.getEndHour();
                     Integer minutosCierre = horarioAtencion.getEndMinute();
 
                     LocalTime horarioApertura =  LocalTime.of(horaApertura, minutosApertura);
                     LocalTime horarioCierre = LocalTime.of(horaCierre, minutosCierre);
 
                     LocalTime horaEntregaSolicitadaSinDia = horaEntregaSolicitada.toLocalTime();
-
-
-                    if(horaEntregaSolicitadaSinDia.isBefore(horarioApertura))
-                    {
-                        return false;
-                    }
-
-                    if(horaEntregaSolicitadaSinDia.isAfter(horarioCierre)){
-                        return false;
-                    }
 
                     if(horaEntregaSolicitadaSinDia.isAfter(horarioApertura) && horaEntregaSolicitadaSinDia.isBefore(horarioCierre))
                     {
@@ -179,7 +210,7 @@ public class PedidoServiceImp implements IPedidoService {
 
                 }
                 //El dia solicitado no se atiende en el local;
-                return false;
+
             }
             return false;
         }
@@ -248,45 +279,12 @@ public class PedidoServiceImp implements IPedidoService {
 
 
 
-    public static BigDecimal CalcularCostoPedido(List<DetallePedido> detallePedidos, Usuario usuario, LocalDateTime horaSolicitada)
+
+
+    public static BigDecimal CalcularCostoEnvioSegunHoraPico(LocalDateTime horaSolicitada)
     {
 
-        double costoServicio=0;
-        double costoEnvio=0;
-        BigDecimal costoTotalProductos = new BigDecimal(0);
-
-
-
-        for (DetallePedido detallePedido: detallePedidos)
-        {
-
-            BigDecimal bigDecimalCantidad = new BigDecimal(detallePedido.getCantidad());
-            BigDecimal bigDecimalCostoDetalle = detallePedido.getMenu().getPrecio().multiply( bigDecimalCantidad );
-            costoTotalProductos.add(bigDecimalCostoDetalle);
-
-        }
-
-
-        //Setear el valor de costoServicio segun nivel usuario
-        switch (usuario.getNivel())
-        {
-            case 1:
-                costoServicio = 100;
-                break;
-            case 2:
-                costoServicio=100;
-                break;
-
-            case 3:
-                costoServicio=50;
-                break;
-            case 4:
-                costoServicio=50;
-                break;
-            case 5:
-                costoServicio=0;
-                break;
-        };
+        BigDecimal costoEnvio = BigDecimal.ZERO;
 
         //Calcular costo del envio segun hora pico o no
 
@@ -310,31 +308,87 @@ public class PedidoServiceImp implements IPedidoService {
 
 
         if (horaSolicitada.isBefore(daytimeRushHourStart)){
-            costoEnvio=100;
+            costoEnvio = new BigDecimal(100);
         }
 
         if(horaSolicitada.isAfter(daytimeRushHourEnd) && horaSolicitada.isBefore(nighttimeRushHourStart) )
         {
-            costoEnvio=100;
+            costoEnvio = new BigDecimal(100);
         }
 
         if(horaSolicitada.isAfter(daytimeRushHourStart) && horaSolicitada.isBefore(daytimeRushHourEnd) )
         {
-            costoEnvio=200;
+            costoEnvio = new BigDecimal(200);
         }
 
         if(horaSolicitada.isAfter(nighttimeRushHourStart) && horaSolicitada.isBefore(nighttimeRushHourEnd))
         {
-            costoEnvio=200;
-        }
-
-        BigDecimal bigDecimalCostoServicio = new BigDecimal(costoServicio);
-        BigDecimal bigDecimalCostoEnvio = new BigDecimal(costoEnvio);
-        BigDecimal totalTotal = costoTotalProductos.add(bigDecimalCostoEnvio).add(bigDecimalCostoServicio);
-
-        return totalTotal;
+            costoEnvio = new BigDecimal(200);
+        };
+        return costoEnvio;
 
     }
+
+
+    public static BigDecimal CalcularCostoServicio(Usuario usuario)
+    {
+        BigDecimal costoServicio=new BigDecimal(0);
+
+        //Setear el valor de costoServicio segun nivel usuario
+        switch (usuario.getNivel())
+        {
+            case 1:
+                costoServicio = new BigDecimal(100);
+                break;
+            case 2:
+               costoServicio = new BigDecimal(100);
+                break;
+
+            case 3:
+                costoServicio = new BigDecimal(50);
+                break;
+            case 4:
+                costoServicio = new BigDecimal(50);
+                break;
+            case 5:
+                costoServicio = new BigDecimal(0);
+                break;
+        };
+        return costoServicio;
+    };
+
+
+    public static BigDecimal CalcularCostoTotalProductos(List<DetallePedido> detallePedidos)
+    {
+        BigDecimal costoTotalProductos = BigDecimal.ZERO;
+        for (DetallePedido detallePedido: detallePedidos)
+        {
+
+            BigDecimal bigDecimalCantidad = new BigDecimal(detallePedido.getCantidad());
+            BigDecimal bigDecimalCostoDetalle = detallePedido.getMenu().getPrecio().multiply( bigDecimalCantidad );
+            costoTotalProductos = costoTotalProductos.add(bigDecimalCostoDetalle);
+
+        };
+        return costoTotalProductos;
+
+
+    }
+
+    public static BigDecimal CalcularCostoTotalPedido(Usuario usuario, LocalDateTime horaSolicitada, List<DetallePedido> detallePedidos)
+    {
+
+        //Descomponer esta funcion en 3 partes distintas para reutilizarla arriba y despues tener una funcion wrapper que ejecute las 3 partes anteriores
+
+        BigDecimal costoTotalPedido = BigDecimal.ZERO;
+
+
+        BigDecimal bigDecimalCostoServicio = PedidoServiceImp.CalcularCostoServicio(usuario);
+        BigDecimal bigDecimalCostoEnvio = PedidoServiceImp.CalcularCostoEnvioSegunHoraPico(horaSolicitada);
+        BigDecimal costoTotalProductos = PedidoServiceImp.CalcularCostoTotalProductos(detallePedidos);
+
+         costoTotalPedido = costoTotalPedido.add(bigDecimalCostoServicio).add(bigDecimalCostoEnvio).add(costoTotalProductos)  ;
+        return costoTotalPedido;
+    } ;
 
 
 
